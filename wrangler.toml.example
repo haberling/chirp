@@ -1,0 +1,44 @@
+# Copy this file to wrangler.toml and fill in your own values.
+# wrangler.toml is gitignored on purpose — it will end up holding your D1
+# database ID and your allowed origins, which are specific to your
+# deployment, not the shared template. Secrets (API keys, tokens) never go
+# in this file at all — see the bottom of this example.
+
+name = "chirp"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chirp"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "drizzle"
+
+# Burst-tier rate limiting (native binding). Window must be 10 or 60 seconds.
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 3, period = 60 }
+
+[vars]
+SITE_NAME = "my-site"
+# Comma-separated exact origins, no wildcards, no trailing slash.
+ALLOWED_ORIGINS = "https://example.com,https://www.example.com"
+MODERATION_MODEL = "claude-haiku-4-5"
+# Default balanced policy — override per deployment. See PLAN.md's
+# "Remaining open item" for the full policy text once it's written.
+MODERATION_POLICY = "Block spam, harassment, hate speech, and obscenity. Allow strong opinions, mild profanity, and heated-but-civil disagreement or off-topic banter."
+COMMENT_MAX_LENGTH = "500"
+RATE_LIMIT_DAILY_MAX = "20"
+DUPLICATE_WINDOW_S = "60"
+LLM_DAILY_CALL_CAP = "5000"
+TURNSTILE_SITE_KEY = "REPLACE_WITH_YOUR_TURNSTILE_SITE_KEY"
+
+# Secrets are NOT set here. For local dev, copy .dev.vars.example to
+# .dev.vars (also gitignored) and fill in real values. For a real
+# deployment, set them with:
+#   wrangler secret put ANTHROPIC_API_KEY
+#   wrangler secret put TURNSTILE_SECRET
+#   wrangler secret put ADMIN_TOKEN

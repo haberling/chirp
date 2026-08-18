@@ -1,0 +1,6 @@
+# Copy to .dev.vars (gitignored) for local `wrangler dev` runs.
+# Real deployments set these with `wrangler secret put <NAME>` instead —
+# this file is local-only and never read in production.
+ANTHROPIC_API_KEY=
+TURNSTILE_SECRET=
+ADMIN_TOKEN=

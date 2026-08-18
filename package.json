@@ -1,0 +1,33 @@
+{
+  "name": "chirp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted, AI-moderated comment widget for static sites",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply chirp --local",
+    "db:migrate:remote": "wrangler d1 migrations apply chirp --remote"
+  },
+  "dependencies": {
+    "hono": "^4.6.0",
+    "drizzle-orm": "^0.36.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "drizzle-kit": "^0.28.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.99.0"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.19.12": true,
+    "esbuild@0.17.19": true,
+    "sharp@0.33.5": true,
+    "workerd@1.20250718.0": true
+  }
+}

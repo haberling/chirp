@@ -140,3 +140,67 @@ cost-circuit-breaker design, the XSS explainer setting up the prompt
 injection insight. The plan that came out the other side is a lot more
 opinionated, and a lot more paranoid in the right places, than the one I
 would have written by just sitting down and listing features.
+
+## 2026-08-18 — Before writing any code: what is a Worker, actually
+
+Before touching a single file, I wanted to sanity-check the plan against how
+Cloudflare Workers actually behaves, instead of assuming. Turned into a
+useful detour.
+
+### The 10ms question
+
+Free-tier Workers get 10ms of CPU time per request, which sounds alarming
+until you learn what it actually measures: synchronous execution only.
+Awaiting a fetch, a D1 query, a Turnstile call, the Anthropic call — none of
+that counts, no matter how long it takes on the wire. Once that clicked, I
+walked the `POST /comments` pipeline step by step pricing out the actual
+on-CPU work (routing, JSON parsing, the IP hash, Drizzle query building) and
+landed on roughly 1-2ms total. The real latency of a comment submission —
+probably 500ms-1.5s, dominated by the Anthropic call — is a UX question
+(disabled submit button covers it), not a CPU-limit risk. Good to know before
+building instead of finding out by hitting the ceiling.
+
+### What a Worker actually is (not a joke, but started as one)
+
+Asked (half-joking, "should we write this in C") what a Worker even runs
+on — turns out it's not a Linux process running an executable at all. It's a
+V8 isolate (same sandboxing model as a Chrome tab) inside `workerd`. No
+filesystem, no raw sockets, no process spawning, no native syscalls — `fetch`
+is the only way out. JS/TS runs natively; everything else (Rust, Python,
+C/C++/Go) runs by compiling to WebAssembly inside the same sandbox, which
+even C's `void*` doesn't escape — it's still just pointing into a private,
+memory-safe linear memory arena.
+
+### The real argument for TypeScript
+
+Almost talked myself into a "cycles per dollar" case for a faster language —
+reasonable instinct, wrong line item. Workers bills CPU time at $0.02 per
+million *milliseconds*. At ~2ms/request that's $0.00000004 per comment —
+against the ~$0.0011 the Anthropic moderation call already costs per
+comment. Four-plus orders of magnitude apart; language speed is not where
+the money or the risk is. And going the other way (C, no native `await`)
+would mean hand-rolling continuation plumbing for a pipeline that's ~8
+sequential, dependent I/O calls spending 99%+ of its wall time idle — the
+worst shape to optimize for raw execution speed and the best shape to want
+ergonomic async for. TypeScript wins on both the billing math and the actual
+shape of the code, not by default. Locking it in as the backend language,
+same as `chirp-core.js` already was — one language end to end.
+
+### One doc fix, filed for later
+
+Found a small inaccuracy while checking D1 limits: PLAN.md's "Rough cost
+shape" section and the README both cite Time Travel (D1's point-in-time
+recovery) as "~30 days," but that's the *paid*-plan number — Free tier is 7
+days. Worth fixing given "affordable to run, adopters may stay on Free" is
+the whole premise; not fixed yet, noting it here so it doesn't get lost
+before the docs pass.
+
+### Next: build order
+
+Settled the order to actually build in, bottom-up since nothing else works
+without the backend: project scaffolding (`package.json`, `wrangler.toml`,
+Hono entry point) → Drizzle schema/migrations for the four tables → `GET
+/health` (simplest real endpoint, proves the plumbing) → `GET
+/comments?page=` (first read path) → the `POST /comments` pipeline built
+incrementally in the order PLAN.md lists it → the client (`chirp-core.js`
+and its two thin wrappers) last, once there's a real API to hit.
