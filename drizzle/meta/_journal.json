@@ -15,6 +15,13 @@
       "when": 1787158691300,
       "tag": "0001_demonic_amphibian",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787159686017,
+      "tag": "0002_lively_harry_osborn",
+      "breakpoints": true
     }
   ]
 }

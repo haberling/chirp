@@ -3,6 +3,6 @@
 # this file is local-only and never read in production.
 ANTHROPIC_API_KEY=
 TURNSTILE_SECRET=
-ADMIN_TOKEN=
 IP_HASH_SALT=
 COMMENTER_ID_SALT=
+HEALTH_CHECK_TOKEN=

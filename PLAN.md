@@ -61,12 +61,24 @@ integration** below.
   behavior) produced real, shipped bugs there; no reason to walk into the
   same trap here.
 - **Worker framework:** **Hono**. Lightweight, TypeScript-first, plays well
-  with Workers/D1 bindings and middleware (CORS, Turnstile check, auth for
-  the admin route). This is an implementation detail, not a product
-  decision, so it's settled here rather than asked about.
+  with Workers/D1 bindings and middleware (CORS, Turnstile check). This is
+  an implementation detail, not a product decision, so it's settled here
+  rather than asked about.
 - **CORS:** exact-match allowlist only (`ALLOWED_ORIGINS`, comma-separated),
-  fail closed if unset. No credentials mode. Public routes only — the admin
-  route gets no cross-origin access at all. See **Security** below.
+  fail closed if unset. No credentials mode. Public routes only. See
+  **Security** below.
+- **Admin/operator access:** no admin HTTP endpoints. D1 has no public
+  network endpoint of its own — it's only reachable via a Worker binding or
+  via Cloudflare's own API/`wrangler` CLI, so a "separate admin tool"
+  already exists for free as `wrangler d1 execute --remote`, authenticated
+  by the operator's own Cloudflare account rather than a bearer secret this
+  app would have to generate, protect, and rotate itself. Building admin
+  routes on the public Worker would mean inventing our own auth (token
+  comparison, brute-force limiting, audit logging — a real surface to get
+  wrong) to reinvent something Cloudflare's IAM already does better. A
+  future admin dashboard (Phase 2) would similarly sit behind Cloudflare
+  Access rather than be served on the open internet at all, not reuse a
+  bearer-token API.
 - **Rate limiting:** hybrid two-tier — Cloudflare's native `ratelimit`
   binding for a short burst window, D1 for a longer sustained window (the
   native binding tops out at 60s, so it can't cover a daily cap on its
@@ -91,13 +103,13 @@ Flat-file site (generic)          Canary site
 Cloudflare Worker (Hono)
   ├─ GET  /comments?page=X          → approved comments for a page
   ├─ POST /comments                 → submit + moderate + (maybe) insert
-  ├─ GET  /admin/rejected-log       → token-protected, last 100 rejections
-  ├─ DELETE /admin/comments/:id     → token-protected, removes a published
-  │                                    comment (moderation-bypass safety
-  │                                    valve — see Security: Prompt injection)
-  ├─ GET  /health                   → public, no auth/CORS/rate-limit — for
-  │                                    external uptime monitors
-  └─ (optional) POST /admin/config-check
+  └─ GET  /health                   → public, no auth/CORS/rate-limit — for
+                                       external uptime monitors
+
+No admin HTTP routes — viewing the rejected log or deleting a bad comment
+(the moderation-bypass safety valve, see Security: Prompt injection) is a
+direct `wrangler d1 execute --remote` command against D1, not a public
+endpoint. See **Decisions locked in: Admin/operator access**.
         │
         │  POST /comments pipeline, cheapest checks first:
         ├─ 1. CORS/Origin check                    (reject: 403, free)
@@ -193,8 +205,6 @@ breaking API change once threading UI actually lands. Concretely, in v1:
   controls**
 - `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET` (required — Turnstile is
   mandatory in v1)
-- `ADMIN_TOKEN` — protects `/admin/rejected-log`, `DELETE
-  /admin/comments/:id`
 - `ANTHROPIC_API_KEY` (secret)
 - `[[ratelimits]]` binding block in `wrangler.toml` (separate from the vars
   above — Wrangler config, not a runtime secret)
@@ -263,8 +273,6 @@ not a special case.
   pipeline, before anything else runs.
 - Fails closed: unset `ALLOWED_ORIGINS` allows nothing cross-origin rather
   than defaulting to `*`.
-- `/admin/rejected-log` gets no permissive CORS — token-protected, meant to
-  be called directly (curl/script), not from arbitrary browser JS.
 
 ### XSS (comment rendering)
 - Comments are fetched as JSON and inserted into the DOM **client-side, at
@@ -357,10 +365,11 @@ this").
   side effects beyond that one verdict — the Worker never executes
   anything the LLM says beyond insert-or-don't. Worst case of a bypass is
   one bad comment going live, not a deeper compromise.
-- **Real safety valve, not prompt-hardening**: this is *why* an admin
-  delete capability for already-approved comments is MVP-scope, not
-  Phase 2 — see `DELETE /admin/comments/:id` below. Prompt-hardening
-  reduces the odds; it can't be trusted to be the only line of defense.
+- **Real safety valve, not prompt-hardening**: this is *why* being able to
+  remove an already-approved comment matters even with the defenses above —
+  see **Decisions locked in: Admin/operator access** for how (`wrangler d1
+  execute`, not an admin endpoint). Prompt-hardening reduces the odds; it
+  can't be trusted to be the only line of defense.
 - **Validate at build time**: once `MODERATION_POLICY` is actually being
   written (see **Remaining open item**), run it against a small red-team
   set of known injection phrasings (direct override attempts, `SYSTEM:`
@@ -369,18 +378,22 @@ this").
 ## Observability
 
 ### Health check
-`GET /health` — a stable, unauthenticated URL for external uptime monitors
-(UptimeRobot, Better Uptime, Healthchecks.io, etc.) to poll.
-- **Public, no auth/CORS/rate-limit.** Different consumer class entirely —
-  machine-to-machine polling, not a browser — so it sits outside the
-  `/comments` pipeline rather than being threaded through it.
+`GET /health` — a stable URL for external uptime monitors (UptimeRobot,
+Better Uptime, Healthchecks.io, etc.) to poll.
+- **Token-gated** (`Authorization: Bearer <HEALTH_CHECK_TOKEN>`), not
+  public — the operator controls who can poll it rather than leaving it
+  open to anyone. Missing/wrong token gets a bare 401 with no db/config
+  detail, checked before anything else runs. No CORS/rate-limit beyond
+  that — different consumer class entirely (machine-to-machine polling,
+  not a browser), so it sits outside the `/comments` pipeline rather than
+  being threaded through it.
 - **Checks D1 connectivity** (a trivial query) — the one dependency shared
   by both the read and write paths, so it's the only thing that drives the
   HTTP status code.
 - **Checks required secrets/bindings are present** (`ANTHROPIC_API_KEY`,
-  `TURNSTILE_SECRET`, `ADMIN_TOKEN`, the `ratelimit` binding) by existence,
-  not a live network call — catches "forgot to set a secret after
-  redeploy" for free.
+  `TURNSTILE_SECRET`, `IP_HASH_SALT`, `COMMENTER_ID_SALT`, the `ratelimit`
+  binding) by existence, not a live network call — catches "forgot to set
+  a secret after redeploy" for free.
 - **Deliberately does not ping Anthropic or Turnstile live.** That would
   spend a real LLM call on every poll (uptime checks run every 1–5 minutes,
   forever) and would conflate "comments are unreadable" (a real outage
@@ -406,7 +419,7 @@ this").
   mocked/stubbed — never a real Anthropic call in CI): the full `POST
   /comments` pipeline end to end for each outcome — approve, reject,
   duplicate, rate-limited, Turnstile-failed, circuit-breaker-tripped —
-  plus `GET /comments`, `GET /health`, and both admin routes.
+  plus `GET /comments` and `GET /health`.
 - **Manual/browser verification** (can't be unit-tested, DOM-timing-
   sensitive): both delivery formats in a real browser — submit and see a
   comment appear, trigger a rejection and confirm the canned message
@@ -477,13 +490,13 @@ this").
       hashed IP
 - [ ] Cloudflare Turnstile integration — required, wired into widget +
       Worker verification, deploy fails fast without keys configured
-- [ ] CORS: exact-origin allowlist, fail-closed, no permissive headers on
-      the admin route
-- [ ] Token-protected admin endpoints: view the rejected log, and delete
-      an already-published comment (`DELETE /admin/comments/:id`) — the
-      real safety valve against a moderation false negative, adversarial
-      or not
-- [ ] `GET /health` — public, unauthenticated uptime-monitor endpoint;
+- [ ] CORS: exact-origin allowlist, fail-closed
+- [ ] Operator access to the rejected log and to deleting an
+      already-published comment (the real safety valve against a
+      moderation false negative, adversarial or not) via `wrangler d1
+      execute --remote` — no admin HTTP endpoints, see **Decisions locked
+      in: Admin/operator access**
+- [ ] `GET /health` — token-gated uptime-monitor endpoint (`HEALTH_CHECK_TOKEN`);
       checks D1 connectivity + required secrets present, no live calls to
       Anthropic/Turnstile — see **Observability**
 - [ ] Drizzle schema + migrations targeting D1

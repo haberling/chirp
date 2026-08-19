@@ -27,9 +27,20 @@ SITE_NAME = "my-site"
 # Comma-separated exact origins, no wildcards, no trailing slash.
 ALLOWED_ORIGINS = "https://example.com,https://www.example.com"
 MODERATION_MODEL = "claude-haiku-4-5"
-# Default balanced policy — override per deployment. See PLAN.md's
-# "Remaining open item" for the full policy text once it's written.
-MODERATION_POLICY = "Block spam, harassment, hate speech, and obscenity. Allow strong opinions, mild profanity, and heated-but-civil disagreement or off-topic banter."
+# Default policy — override per deployment. Deliberately permissive by
+# default (approve on ambiguity); only the seven categories below reject.
+MODERATION_POLICY = """
+Default to allowing comments. Reject only where a comment clearly and unambiguously crosses one of the lines below -- when in doubt, approve. Strong opinions, dark or crude humor, coarse language, off-topic tangents, and hostile or offensive opinions (including ones expressing dislike or contempt for a group) are all allowed and must not be rejected on their own -- being distasteful, edgy, or unpopular is not grounds for rejection.
+
+Reject only for:
+- spam: promotional, repetitive, or bot-like content unrelated to the discussion.
+- harassment: targeted, demeaning, or abusive language aimed at a specific person, not general criticism of an idea or argument.
+- obscenity: graphic sexual content or gratuitous explicit material; mild profanity used for emphasis is allowed.
+- threats: a threat of harm to a specific person or group -- physical violence, doxxing ("I'll post your address"), or coercive threats ("I'll get you fired") -- not merely a hostile or hateful opinion with no threat attached.
+- blasphemy: contemptuous mockery or insult directed at core Nicene Christian tenets (the Trinity, the divinity of Christ) or figures -- not genuine theological questions, personal-faith stories, or criticism of Christians' behavior or politics, and not applicable to non-Nicene groups' distinct doctrines.
+- doxxing: posting someone's real private or identifying information (home address, phone number, workplace tied to their identity) without consent, regardless of whether it's paired with a threat.
+- self_harm: a genuine, current expression of the commenter's own suicidal ideation or self-harm intent. Judge intent from context, not keywords -- hyperbolic, idiomatic, or joking use of similar language (including euphemisms like "unalive"), such as venting about stress or exaggerating a reaction, stays allowed.
+"""
 COMMENT_MAX_LENGTH = "500"
 RATE_LIMIT_DAILY_MAX = "20"
 DUPLICATE_WINDOW_S = "60"
@@ -41,7 +52,6 @@ TURNSTILE_SITE_KEY = "REPLACE_WITH_YOUR_TURNSTILE_SITE_KEY"
 # deployment, set them with:
 #   wrangler secret put ANTHROPIC_API_KEY
 #   wrangler secret put TURNSTILE_SECRET
-#   wrangler secret put ADMIN_TOKEN
 #   wrangler secret put IP_HASH_SALT       # any random string; generate
 #                                           # with `openssl rand -hex 32`
 #   wrangler secret put COMMENTER_ID_SALT  # separate random string, same
@@ -49,3 +59,6 @@ TURNSTILE_SITE_KEY = "REPLACE_WITH_YOUR_TURNSTILE_SITE_KEY"
 #                                           # IP_HASH_SALT so either can be
 #                                           # rotated without affecting the
 #                                           # other
+#   wrangler secret put HEALTH_CHECK_TOKEN # gates GET /health — give this
+#                                           # to your uptime monitor as an
+#                                           # Authorization: Bearer header

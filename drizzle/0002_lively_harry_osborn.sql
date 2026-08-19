@@ -1,0 +1,1 @@
+CREATE INDEX `comments_dedupe_idx` ON `comments` (`page_id`,`ip_hash`,`created_at`);

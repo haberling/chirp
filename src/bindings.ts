@@ -12,7 +12,7 @@ export type Bindings = {
   TURNSTILE_SITE_KEY: string;
   ANTHROPIC_API_KEY: string;
   TURNSTILE_SECRET: string;
-  ADMIN_TOKEN: string;
   IP_HASH_SALT: string;
   COMMENTER_ID_SALT: string;
+  HEALTH_CHECK_TOKEN: string;
 };

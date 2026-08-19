@@ -17,6 +17,11 @@ export const comments = sqliteTable(
   },
   (table) => ({
     pageIdIdx: index("comments_page_id_idx").on(table.pageId, table.createdAt),
+    // Serves the duplicate-submit dedupe check (ip_hash + page_id + body,
+    // within DUPLICATE_WINDOW_S) — runs on every POST /comments attempt,
+    // ahead of rate-limit/Turnstile/LLM cost, so it's worth its own index
+    // rather than relying on the page_id index's partition scan.
+    dedupeIdx: index("comments_dedupe_idx").on(table.pageId, table.ipHash, table.createdAt),
   }),
 );
 
