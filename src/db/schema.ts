@@ -11,6 +11,9 @@ export const comments = sqliteTable(
     body: text("body").notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     ipHash: text("ip_hash").notNull(),
+    // Salted hash of a client-held GUID (see src/lib/commenter-id.ts) — a
+    // good-faith "same commenter" continuity tag, not a security identity.
+    commenterId: text("commenter_id").notNull(),
   },
   (table) => ({
     pageIdIdx: index("comments_page_id_idx").on(table.pageId, table.createdAt),

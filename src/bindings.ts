@@ -13,4 +13,6 @@ export type Bindings = {
   ANTHROPIC_API_KEY: string;
   TURNSTILE_SECRET: string;
   ADMIN_TOKEN: string;
+  IP_HASH_SALT: string;
+  COMMENTER_ID_SALT: string;
 };

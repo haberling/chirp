@@ -42,3 +42,10 @@ TURNSTILE_SITE_KEY = "REPLACE_WITH_YOUR_TURNSTILE_SITE_KEY"
 #   wrangler secret put ANTHROPIC_API_KEY
 #   wrangler secret put TURNSTILE_SECRET
 #   wrangler secret put ADMIN_TOKEN
+#   wrangler secret put IP_HASH_SALT       # any random string; generate
+#                                           # with `openssl rand -hex 32`
+#   wrangler secret put COMMENTER_ID_SALT  # separate random string, same
+#                                           # method — keep independent from
+#                                           # IP_HASH_SALT so either can be
+#                                           # rotated without affecting the
+#                                           # other

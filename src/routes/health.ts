@@ -4,7 +4,13 @@ import type { Bindings } from "../bindings";
 import { createDb } from "../db/client";
 import { moderationBudget } from "../db/schema";
 
-const REQUIRED_SECRETS = ["ANTHROPIC_API_KEY", "TURNSTILE_SECRET", "ADMIN_TOKEN"] as const;
+const REQUIRED_SECRETS = [
+  "ANTHROPIC_API_KEY",
+  "TURNSTILE_SECRET",
+  "ADMIN_TOKEN",
+  "IP_HASH_SALT",
+  "COMMENTER_ID_SALT",
+] as const;
 
 export const health = new Hono<{ Bindings: Bindings }>();
 
