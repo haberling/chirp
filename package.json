@@ -18,16 +18,16 @@
     "drizzle-orm": "^0.36.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250101.0",
-    "drizzle-kit": "^0.28.0",
+    "@cloudflare/workers-types": "^5.20260815.1",
+    "drizzle-kit": "^0.31.10",
     "typescript": "^5.7.0",
-    "wrangler": "^3.99.0"
+    "wrangler": "^4.124.0"
   },
   "allowScripts": {
-    "esbuild@0.18.20": true,
-    "esbuild@0.19.12": true,
-    "esbuild@0.17.19": true,
     "sharp@0.33.5": true,
-    "workerd@1.20250718.0": true
+    "workerd@1.20260815.1": true,
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
   }
 }
