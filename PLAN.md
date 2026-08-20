@@ -505,14 +505,16 @@ Better Uptime, Healthchecks.io, etc.) to poll.
       pipeline against local D1, LLM stubbed), manual browser check of
       both delivery formats including a hybrid-mode nav swap
 - [ ] `LICENSE` file (MIT, matching Canary's)
-- [ ] README + template so a third party can deploy their own instance
-      end-to-end (create D1 DB, set secrets, `wrangler deploy`, drop in the
-      generic script tag *or* copy `chirp.html`/`chirp.js` into a Canary
-      site's `widgets/` folder); notes that D1 already has built-in
-      point-in-time recovery (Time Travel, ~30 days) so no custom backup
-      tooling is needed, and that the deploying site owner is the data
-      controller for any name/email collected — their own privacy policy,
-      not Chirp's job to dictate
+- [ ] `README.md` — short landing page (what Chirp is, the two delivery
+      formats, links out), not a walkthrough — see **Documentation**
+- [ ] `DEPLOYMENT_GUIDE.md` — the actual end-to-end setup instructions
+      (create D1 DB, set secrets, `wrangler deploy`, drop in the generic
+      script tag *or* copy `chirp.html`/`chirp.js` into a Canary site's
+      `widgets/` folder); notes that D1 already has built-in point-in-time
+      recovery (Time Travel — 7 days on Free, ~30 on Paid) so no custom
+      backup tooling is needed, and that the deploying site owner is the
+      data controller for any name/email collected — their own privacy
+      policy, not Chirp's job to dictate — see **Documentation**
 
 ### Phase 2
 - [ ] Threaded replies UI: reply button, nested/indented rendering, a
@@ -574,3 +576,20 @@ one caveat that actually matters: revisit with real numbers once
 `MODERATION_POLICY`'s final wording exists (see **Remaining open item**),
 since a longer, more detailed policy prompt directly raises the static
 input-token share.
+
+## Documentation
+
+Two separate files, two separate audiences — don't collapse them back into
+one:
+
+- **`README.md`** stays a short landing page: what Chirp is, the two
+  delivery formats, links out to the docs that matter. Someone evaluating
+  whether to adopt Chirp shouldn't have to scroll past `wrangler secret
+  put` commands to find out what it does.
+- **`DEPLOYMENT_GUIDE.md`** (separate file) owns the actual end-to-end
+  setup walkthrough — create the D1 database, set secrets, `wrangler
+  deploy`, drop in the generic script tag or copy `chirp.html`/`chirp.js`
+  into a Canary site's `widgets/` folder — plus the D1 Time Travel note
+  and the data-controller/privacy note. Someone who's already decided to
+  deploy shouldn't have to dig a setup checklist out of prose written to
+  sell them on the project.

@@ -1,0 +1,64 @@
+<!--
+  Standard Canary widget contract (see ../canary/WIDGETS.md): a plain
+  Mustache-syntax HTML template, filled from the fence block's YAML body.
+  No dynamic comment list at build time -- comments are fetched at runtime
+  by chirp.js, same as the generic embed's chirp-core.js (this template
+  only lays out the mount points and the submit form skeleton).
+
+  "page" is required and has no fallback -- a missing page id is a content
+  bug in the page author's fence block, not something to paper over with a
+  derived default. Page identity needs to stay stable across URL renames
+  (see the parent Chirp project's PLAN.md, "Decisions locked in: Page
+  identity"), so it's never auto-derived from the current URL.
+
+  The Worker's API origin and the Turnstile site key can't come from this
+  YAML body -- they're deployment config, not per-instance content -- so
+  they're hardcoded constants at the top of the sibling chirp.js, following
+  this project's own established pattern (widgets get "ejected" into a
+  site's own widgets/ folder for exactly this kind of one-time local
+  customization).
+
+  NOTE: this comment deliberately never writes a literal double-brace tag
+  -- the templater has no notion of "this is just a comment," so real tag
+  syntax typed here would be executed for real. See WIDGETS.md.
+-->
+<!--clipboard
+```chirp
+page: my-page-id
+```
+-->
+<div class="chirp-widget" data-widget="chirp" data-chirp-page="{{page}}">
+  <div class="chirp-list" data-chirp-list></div>
+  <button type="button" class="chirp-load-more" data-chirp-load-more hidden>Load more</button>
+  <div class="chirp-status" role="status" aria-live="polite" data-chirp-status></div>
+  <button type="button" class="chirp-toggle" data-chirp-toggle aria-expanded="false">
+    <span class="chirp-toggle-icon">+</span> Post a comment
+  </button>
+  <div class="chirp-form-wrap" data-chirp-form-wrap>
+    <div class="chirp-form-inner">
+      <div class="chirp-reply-indicator" data-chirp-reply-indicator hidden>
+        Replying to <strong data-chirp-reply-name></strong>
+        <button type="button" data-chirp-reply-cancel>Cancel</button>
+      </div>
+      <form class="chirp-form" data-chirp-form novalidate>
+        <label>
+          Name
+          <input type="text" name="authorName" required maxlength="100" autocomplete="name">
+        </label>
+        <label>
+          Email (optional, never shown)
+          <input type="email" name="authorEmail" maxlength="254" autocomplete="email">
+        </label>
+        <label>
+          Comment
+          <textarea name="body" required maxlength="500"></textarea>
+        </label>
+        <div class="chirp-honeypot" aria-hidden="true">
+          <label>Leave this field blank<input type="text" name="honeypot" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <div class="chirp-turnstile" data-chirp-turnstile></div>
+        <button type="submit">Post comment</button>
+      </form>
+    </div>
+  </div>
+</div>

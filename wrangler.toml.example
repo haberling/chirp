@@ -9,6 +9,14 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
+# Serves the generic embed (client/chirp-widget.js + chirp-core.js)
+# straight off this Worker — one `wrangler deploy` ships the API and the
+# widget together, no separate hosting/build step. Cloudflare serves a
+# request from here first if the path matches a file; only unmatched
+# paths (/health, /comments) fall through to the Worker's fetch handler.
+[assets]
+directory = "./client"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "chirp"
@@ -38,7 +46,7 @@ Reject only for:
 - obscenity: graphic sexual content or gratuitous explicit material; mild profanity used for emphasis is allowed.
 - threats: a threat of harm to a specific person or group -- physical violence, doxxing ("I'll post your address"), or coercive threats ("I'll get you fired") -- not merely a hostile or hateful opinion with no threat attached.
 - blasphemy: contemptuous mockery or insult directed at core Nicene Christian tenets (the Trinity, the divinity of Christ) or figures -- not genuine theological questions, personal-faith stories, or criticism of Christians' behavior or politics, and not applicable to non-Nicene groups' distinct doctrines.
-- doxxing: posting someone's real private or identifying information (home address, phone number, workplace tied to their identity) without consent, regardless of whether it's paired with a threat.
+- doxxing: posting someone's real private or identifying information (home address, phone number, workplace tied to their identity), regardless of whether it's paired with a threat.
 - self_harm: a genuine, current expression of the commenter's own suicidal ideation or self-harm intent. Judge intent from context, not keywords -- hyperbolic, idiomatic, or joking use of similar language (including euphemisms like "unalive"), such as venting about stress or exaggerating a reaction, stays allowed.
 """
 COMMENT_MAX_LENGTH = "500"

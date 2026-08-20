@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply chirp --local",
-    "db:migrate:remote": "wrangler d1 migrations apply chirp --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply chirp --remote",
+    "db:seed:preview": "wrangler d1 execute chirp --local --file=./scripts/seed-preview.sql"
   },
   "dependencies": {
     "hono": "^4.6.0",

@@ -1,0 +1,358 @@
+/*
+ * Styling for the chirp widget (see chirp.html/.js). Lives beside its
+ * template/behavior siblings, discovered and linked the same way -- see
+ * ../canary/WIDGETS.md. Relies on the color tokens framework.css defines
+ * on :root (--bg, --bg-elevated, --text, --text-dim, --border, --accent);
+ * those cascade globally once defined, regardless of which stylesheet
+ * file references them, so this file doesn't need to redefine or import
+ * them -- same reasoning as slideshow.css/downloads.css.
+ */
+
+.chirp-widget {
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  max-width: 640px;
+}
+
+.chirp-comment {
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 0;
+}
+
+.chirp-comment:last-child {
+  border-bottom: none;
+}
+
+.chirp-comment-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.chirp-comment-author {
+  font-weight: 600;
+}
+
+.chirp-comment-badge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.chirp-comment-time {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+.chirp-comment-body {
+  margin: 0 0 0.4rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chirp-comment-reply {
+  margin-left: 1.25rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--border);
+}
+
+.chirp-reply-btn {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.chirp-reply-btn:hover {
+  text-decoration: underline;
+}
+
+.chirp-thread-toggle {
+  display: block;
+  font: inherit;
+  font-size: 0.75rem;
+  margin: 0.25rem 0 0.25rem 1.25rem;
+  padding: 0.1rem 0;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.chirp-thread-toggle:hover {
+  color: var(--accent);
+}
+
+.chirp-thread-toggle-icon {
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+}
+
+.chirp-replies {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chirp-thread-toggle[aria-expanded="false"] + .chirp-replies {
+  grid-template-rows: 0fr;
+}
+
+.chirp-replies-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.chirp-empty {
+  color: var(--text-dim);
+}
+
+.chirp-status {
+  min-height: 1.2em;
+  font-size: 0.85rem;
+}
+
+.chirp-status:empty {
+  min-height: 0;
+}
+
+.chirp-status-error {
+  margin: 0.5rem 0;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  background: #b91c1c;
+  color: #fff;
+}
+
+.chirp-status-success {
+  margin: 0.5rem 0;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.chirp-load-more {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.chirp-load-more:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chirp-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  margin-top: 0.75rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.chirp-toggle:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.chirp-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 400;
+  font-size: 1.9em;
+  line-height: 1;
+  position: relative;
+  top: -3px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chirp-toggle[aria-expanded="true"] .chirp-toggle-icon {
+  transform: rotate(45deg);
+}
+
+/* Slides the form open to its exact content height (no guessed
+   max-height) -- see chirp.js for why aria-expanded is the single source
+   of truth driving both this animation and the button's a11y state. */
+.chirp-form-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chirp-toggle[aria-expanded="true"] + .chirp-form-wrap {
+  grid-template-rows: 1fr;
+}
+
+.chirp-form-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.chirp-reply-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+/* [hidden] alone loses to the plain-class rule above (equal specificity,
+   later in source order) -- this one's more specific so it actually wins
+   and the attribute works as intended. */
+.chirp-reply-indicator[hidden] {
+  display: none;
+}
+
+.chirp-reply-indicator button {
+  margin-left: auto;
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chirp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.chirp-form input,
+.chirp-form textarea {
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.chirp-form textarea {
+  resize: vertical;
+  min-height: 4em;
+}
+
+.chirp-form button[type="submit"] {
+  align-self: flex-start;
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+}
+
+.chirp-form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.chirp-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.chirp-rules-link {
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chirp-rules-dialog {
+  max-width: 480px;
+  width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  color: var(--text);
+  background: var(--bg-elevated);
+}
+
+.chirp-rules-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.chirp-rules-dialog h2 {
+  margin: 0 0 0.5rem;
+}
+
+.chirp-rules-dialog h3 {
+  margin: 0 0 0.15rem;
+  font-size: 0.9rem;
+}
+
+.chirp-rules-dialog p {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.chirp-rules-item {
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.chirp-rules-footnote {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: 1rem !important;
+}
+
+.chirp-rules-close {
+  margin-top: 0.75rem;
+  font: inherit;
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+}
