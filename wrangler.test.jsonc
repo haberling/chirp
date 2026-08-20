@@ -1,0 +1,48 @@
+// Wrangler config used only by the integration test suite (npm test).
+// Deliberately separate from wrangler.toml (gitignored, holds real deploy
+// values) so tests run against fixed, safe, committed values and never
+// touch a real account. See test/README.md.
+{
+  "name": "chirp-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-23",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "chirp-test",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "drizzle"
+    }
+  ],
+
+  // Mirrors the burst tier in wrangler.toml.example (3 requests / 60s) so
+  // burst-limit tests exercise the same threshold production runs with.
+  "ratelimits": [
+    {
+      "name": "RATE_LIMITER",
+      "namespace_id": "9999",
+      "simple": { "limit": 3, "period": 60 }
+    }
+  ],
+
+  "vars": {
+    "SITE_NAME": "chirp-test",
+    "ALLOWED_ORIGINS": "https://example.com",
+    "MODERATION_MODEL": "claude-haiku-4-5",
+    "MODERATION_POLICY": "test policy — the moderation call itself is mocked in tests, this text is never sent to a real model",
+    "COMMENT_MAX_LENGTH": "500",
+    "RATE_LIMIT_DAILY_MAX": "20",
+    "DUPLICATE_WINDOW_S": "60",
+    "LLM_DAILY_CALL_CAP": "1000",
+    "TURNSTILE_SITE_KEY": "test-site-key",
+    // Not real secrets — fixed test-only values so the suite is
+    // self-contained. `wrangler secret put` is for deploys, not this file.
+    "ANTHROPIC_API_KEY": "test-anthropic-key",
+    "TURNSTILE_SECRET": "test-turnstile-secret",
+    "IP_HASH_SALT": "test-ip-hash-salt",
+    "COMMENTER_ID_SALT": "test-commenter-id-salt",
+    "HEALTH_CHECK_TOKEN": "test-health-check-token"
+  }
+}

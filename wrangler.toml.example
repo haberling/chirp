@@ -24,9 +24,8 @@ database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 migrations_dir = "drizzle"
 
 # Burst-tier rate limiting (native binding). Window must be 10 or 60 seconds.
-[[unsafe.bindings]]
+[[ratelimits]]
 name = "RATE_LIMITER"
-type = "ratelimit"
 namespace_id = "1001"
 simple = { limit = 3, period = 60 }
 

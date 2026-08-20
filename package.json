@@ -7,28 +7,38 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:preview": "serve dev -p 8788",
     "deploy": "wrangler deploy",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply chirp --local",
     "db:migrate:remote": "wrangler d1 migrations apply chirp --remote",
-    "db:seed:preview": "wrangler d1 execute chirp --local --file=./scripts/seed-preview.sql"
+    "db:seed:preview": "wrangler d1 execute chirp --local --file=./scripts/seed-preview.sql",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "hono": "^4.6.0",
-    "drizzle-orm": "^0.36.0"
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.6.0"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@cloudflare/workers-types": "^5.20260815.1",
+    "@msw/cloudflare": "^0.0.1",
     "drizzle-kit": "^0.31.10",
+    "msw": "^2.15.0",
+    "serve": "^14.2.6",
     "typescript": "^5.7.0",
+    "vitest": "^4.1.11",
     "wrangler": "^4.124.0"
   },
   "allowScripts": {
     "sharp@0.33.5": true,
     "workerd@1.20260815.1": true,
+    "msw@2.15.0": true,
     "esbuild@0.18.20": true,
     "esbuild@0.25.12": true,
+    "esbuild@0.28.1": true,
     "esbuild@0.28.2": true
   }
 }

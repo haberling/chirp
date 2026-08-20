@@ -1,0 +1,12 @@
+# Cloudflare's Pages-style static-asset header convention (also honored by
+# Workers [assets]) -- see https://developers.cloudflare.com/workers/static-assets/headers/
+#
+# chirp-core.js needs Access-Control-Allow-Origin because the Canary widget
+# package (canary-widget/chirp.js) loads it via a cross-origin dynamic
+# import() at runtime, and module fetches -- unlike a plain <script src>
+# tag -- are CORS-gated. It's public, non-sensitive static JS (no secrets,
+# no per-user data), so a wildcard is fine; scoped to this one file rather
+# than every asset since nothing else here needs it (chirp-widget.js is
+# always loaded same-origin via a plain <script src>, not import()).
+/chirp-core.js
+  Access-Control-Allow-Origin: *

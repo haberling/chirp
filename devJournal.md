@@ -483,3 +483,106 @@ Screenshotting every visual change to actually confirm it (not just
 reasoning about CSS in the abstract) caught real bugs — the dark-mode
 background issue and both bugs above were things that would have been
 easy to ship broken without actually looking at the rendered result.
+
+## 2026-08-19 — Integration tests, a security pass, and a question that found a real bug
+
+### Integration over unit
+
+Explicitly decided against a unit test layer — I don't care about
+isolated-function coverage here, I care whether the actual pipeline
+(CORS → dedupe → rate limits → Turnstile → circuit breaker → moderation →
+D1) behaves correctly end to end. Went with `@cloudflare/vitest-pool-workers`
+specifically because it runs the suite *inside* real `workerd`, against a
+real local D1 (migrations applied for real from `drizzle/`) and the real
+`ratelimit` binding — only the two outbound calls (Anthropic, Turnstile)
+are mocked, via `@msw/cloudflare`. 27 tests, no unit layer, and it still
+caught real things: getting `readD1Migrations` wired through
+`vitest.config.ts` (worker code has no filesystem access, so it has to be
+read at config-build time and injected as a binding) took a few wrong
+turns before landing on the pattern Cloudflare's own fixtures use.
+
+### The two audit follow-ups
+
+Writing the tests pulled in fresh dependencies, which surfaced two
+pre-existing things worth fixing while in there:
+
+- `drizzle-orm` was on 0.36, and 0.45.2 fixes a real high-severity SQL
+  injection advisory (GHSA-gpj5-g38j-94v9, in `sql.identifier()`/`sql.as()`
+  escaping). We don't call either function anywhere, so it was a
+  drop-in bump — confirmed with a clean typecheck and the full suite
+  still green afterward.
+- `wrangler.toml`'s rate limiter binding was still using the
+  `[[unsafe.bindings]]` escape hatch from before Cloudflare shipped a
+  first-class `ratelimits` config key. Swapped it — `wrangler deploy
+  --dry-run` now shows it as a proper "Rate Limit" resource instead of
+  an unsafe one.
+
+Got asked directly afterward what's actually stopping SQL injection in
+this codebase, which was worth answering precisely rather than vaguely:
+every real query goes through Drizzle's query builder (parameterized by
+construction), and the only three raw-`sql`/`.prepare()` touchpoints in
+the whole app are either fully static text or interpolate a Drizzle
+column reference, never a user-supplied value. The defense isn't a
+filter anywhere — it's that the codebase structurally never has a place
+where user input reaches SQL as text.
+
+### Writing the deployment guide surfaced a real bug on its own
+
+Writing `DEPLOYMENT_GUIDE.md` meant actually running the commands it
+describes, not just describing them — and that caught something: `[assets]`
+serves the whole `client/` directory verbatim, which meant `preview.html`
+(documented everywhere as "dev-only, not shipped") was actually being
+deployed and made publicly servable at the real Worker URL. Fixed with a
+`client/.assetsignore` — Cloudflare's `.gitignore`-syntax exclude file for
+static assets — and confirmed via `WRANGLER_LOG=debug` that it's actually
+excluded, not just assumed to be.
+
+### The question that found the real bug: "why would chirp-core.js need to be copied in?"
+
+Explaining *why* the Worker serves the widget files led to explaining the
+Canary widget's distribution instructions ("copy chirp.html, chirp.js,
+AND chirp-core.js into your widgets/ folder") — and got asked, reasonably,
+why a file already served by the Worker would need copying anywhere at
+all. Good question, and chasing it down turned up something the original
+build never actually caught: `canary-widget/chirp.js` has a static
+`import { initInstance } from "./chirp-core.js"` at its top level, but
+Canary's `SiteBuilder.BuildWidgetScriptsHtml` emits every widget's `.js`
+file as a plain `<script src="..." defer>` — never `type="module"`. A
+static `import` statement is a flat `SyntaxError` in a classic script.
+The Canary widget has never actually run once deployed to a real site —
+it would have failed silently (script tag present, script never executes)
+the first time anyone tried it, and nothing in the test suite or the
+generic embed's own testing would have caught it, since that whole
+codepath only exists for the Canary delivery format.
+
+Fixed by switching to a dynamic `import()` — legal in a classic script,
+since it's a function call rather than a declaration — pointed at the
+Worker's own already-deployed `chirp-core.js` (`${API_ORIGIN}/chirp-core.js`).
+That's also the actual answer to the original question: no, it doesn't
+need to be copied anywhere anymore. One real gotcha to work through:
+cross-origin *module* fetches (unlike a plain `<script src>`) are
+CORS-gated, so this needed a `client/_headers` file (Cloudflare's
+Pages-style header convention, works for Workers static assets too)
+granting `Access-Control-Allow-Origin` on just that one file. Verified
+the whole chain against a real local `wrangler dev` — both that the
+header shows up on `chirp-core.js` and that it's absent on
+`chirp-widget.js` (which doesn't need it, still same-origin `<script
+src>`).
+
+Fixing that immediately broke something else, caught by testing the fix
+for real instead of trusting the code read: the `.assetsignore` from the
+`preview.html` fix earlier in this session turned out to apply to local
+`wrangler dev` too, not just real deploys — so the documented local
+iteration loop (`wrangler dev`, open `preview.html`) silently 404'd.
+Fixed by moving `dev/preview.html` fully outside `client/` and giving it
+its own tiny local static server (`npm run dev:preview`, port 8788,
+alongside `wrangler dev`'s 8787) — confirmed with real processes, not
+just reasoning about it, including the `Origin: http://localhost:8788`
+CORS round trip against the Worker.
+
+Worth remembering as a pattern, not a one-off: a plain "wait, why does
+that need to happen" question caught a bug that reading the actual
+Canary source code (twice, earlier in the project) hadn't — and every
+fix in this chain only got trusted after actually running it (real
+`wrangler dev`, real `curl`, real `WRANGLER_LOG=debug`), not after just
+re-reading the diff.
