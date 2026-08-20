@@ -586,3 +586,69 @@ Canary source code (twice, earlier in the project) hadn't — and every
 fix in this chain only got trusted after actually running it (real
 `wrangler dev`, real `curl`, real `WRANGLER_LOG=debug`), not after just
 re-reading the diff.
+
+## 2026-08-19 — A wordmark for the Canary widget
+
+### Describing a shape instead of picking from a mood board
+
+Asked for a logo built from geometry instead of vibes: two thin, obtuse
+triangles mirrored over the x-axis, sharing their left point, about 70°
+between their long sides, three small speech rays out of the center,
+"Chirp" set to the right. Specific enough that there was a real geometry
+problem to solve rather than a style question — spines at ±35° off
+horizontal (which sums to the requested 70°), each wing a thin blade with
+an obtuse angle at the back vertex rather than at the tip. Built it as its
+own file (`canary-widget/chirp-logo.svg`) up front, since the eventual
+destination is inline markup inside `chirp.html` — colors went in as
+`var(--accent, …)` / `var(--text, …)` from the start for that reason, not
+bolted on later.
+
+### The seam, twice
+
+First version had a real bug: two separately-closed triangle paths only
+share their apex at the root point, which leaves a thin sliver of the
+page's background showing through where the two "wings" almost, but don't
+quite, touch along their inner edges. Fixed it the blunt way first — push
+the inner points a couple of pixels past the centerline so the fills
+actually overlap instead of just meeting at a point.
+
+Inkscape wasn't installed on this machine, so rather than hand-editing
+path data blind, opened the containing folder and let the real editing
+happen there instead. What came back was a cleaner fix than the overlap
+hack: one four-point path (tip → root → tip → a single shared back vertex
+→ close) instead of two separate triangles, so there's only ever one
+seam-defining point, not two nearly-coincident ones. Also picked up three
+small accent triangles near the tips — a deliberate addition, not a fix.
+
+One thing did slip through the Inkscape round-trip: the mouth and the
+three new triangles came back with `fill:#000000` hardcoded instead of
+the `var(--accent, …)` pattern, which would have silently defeated the
+entire point of designing it to inherit the host page's theme. Caught it
+by rendering the mark on an explicit light swatch and an explicit dark
+swatch side by side instead of just reading the code — on the dark
+swatch it nearly vanished, flat black on a near-black background.
+Reverted just that one thing; left the rest of the Inkscape edit alone.
+
+### The rays didn't survive
+
+The three speech rays turned out to be a design miss on my end, not a
+code bug — they were sitting on the wrong side of the mark, fanned out
+from the pinched root point away from the mouth, instead of near where
+the "sound" would actually be coming from. Cut entirely rather than
+repositioned once I said to stop touching them. Left a blank gutter on
+the left side of the artwork afterward, which got trimmed by tightening
+the SVG's `viewBox` once it was clear the rays weren't coming back.
+
+### Inlining it
+
+Landed as inline markup in `chirp.html`. Inkscape's editor metadata
+(`<defs>`, `<sodipodi:namedview>`, the guides, the XML declaration) got
+stripped first — none of it renders, it's just noise in a shipped
+template. Marked it `aria-hidden="true"`: it's a decorative wordmark, not
+a heading, and hiding it from the accessibility tree sidesteps a
+duplicate-`id` problem too, in case two `chirp` widgets ever land on the
+same page. `chirp.css` picked up one new rule for it (`.chirp-logo`, 28px
+tall), sized to match the `0.75rem` spacing already used everywhere else
+in that file rather than inventing a new number. The generic embed's
+Shadow DOM widget doesn't have the mark yet — same asset, just not wired
+in on that side.

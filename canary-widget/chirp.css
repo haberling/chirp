@@ -17,6 +17,13 @@
   max-width: 640px;
 }
 
+.chirp-logo {
+  display: block;
+  height: 28px;
+  width: auto;
+  margin-bottom: 0.75rem;
+}
+
 .chirp-comment {
   border-bottom: 1px solid var(--border);
   padding: 0.75rem 0;

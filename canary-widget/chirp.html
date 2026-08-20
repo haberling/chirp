@@ -21,6 +21,12 @@
   NOTE: this comment deliberately never writes a literal double-brace tag
   -- the templater has no notion of "this is just a comment," so real tag
   syntax typed here would be executed for real. See WIDGETS.md.
+
+  The inline <svg> below is chirp-logo.svg (see the sibling file) with its
+  Inkscape editor metadata stripped -- none of it renders, it's just noise
+  in a shipped template. aria-hidden because it's a decorative wordmark,
+  not a heading; keeps this instance-repeatable safe too (no id to collide
+  if two chirp widgets land on the same page).
 -->
 <!--clipboard
 ```chirp
@@ -28,6 +34,13 @@ page: my-page-id
 ```
 -->
 <div class="chirp-widget" data-widget="chirp" data-chirp-page="{{page}}">
+  <svg class="chirp-logo" viewBox="28 0 162 64" aria-hidden="true">
+    <text x="66" y="33" dominant-baseline="central" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-weight="800" font-size="30" fill="var(--text, #1a1a1a)">Chirp</text>
+    <path fill="var(--accent, #d9760a)" d="M 56.601562,14.630859 32.178694,31.942385 56.591797,49.255859 42.412109,31.951172 Z"/>
+    <path fill="var(--accent, #d9760a)" d="m 48.482447,31.975813 12.653233,0.37052 -0.01853,-0.703987 z"/>
+    <path fill="var(--accent, #d9760a)" d="M 48.671023,28.248019 60.821306,24.696652 60.586484,24.032724 Z"/>
+    <path fill="var(--accent, #d9760a)" d="m 48.553335,35.710017 12.150283,3.551367 -0.234822,0.663928 z"/>
+  </svg>
   <div class="chirp-list" data-chirp-list></div>
   <button type="button" class="chirp-load-more" data-chirp-load-more hidden>Load more</button>
   <div class="chirp-status" role="status" aria-live="polite" data-chirp-status></div>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Chirp wordmark. The mouth is one 4-point path (tip, root, tip, a single
+  shared back vertex, close) rather than two separately-closed triangles --
+  one shared back vertex instead of two nearly-coincident ones means no
+  seam to worry about, even under anti-aliasing. Three small accent
+  triangles sit near the tips. "Chirp" sits to the right.
+
+  Meant to be inlined later (per the generic embed's Shadow DOM and the
+  Canary widget's page-level styles) -- colors use var(--accent)/var(--text)
+  with fallbacks, so it inherits the host's tokens where they exist
+  (Canary sites, per chirp.css) and still renders sensibly where they
+  don't (generic-embed sites, which chirp-widget.js already assumes have
+  no such tokens).
+-->
+
+<svg
+   viewBox="28 0 162 64"
+   role="img"
+   aria-labelledby="chirp-logo-title"
+   version="1.1"
+   id="svg3"
+   sodipodi:docname="chirp-logo.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs3" />
+  <sodipodi:namedview
+     id="namedview3"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     showguides="true"
+     inkscape:zoom="9.5421053"
+     inkscape:cx="72.468285"
+     inkscape:cy="14.200221"
+     inkscape:window-width="1920"
+     inkscape:window-height="1111"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg3">
+    <sodipodi:guide
+       position="42.338665,21.870932"
+       orientation="1,0"
+       id="guide3"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="46.530612,32.036404"
+       orientation="0,-1"
+       id="guide4"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="48.463921,28.726565"
+       orientation="1,0"
+       id="guide5"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="61.13568,29.171188"
+       orientation="1,0"
+       id="guide6"
+       inkscape:locked="false" />
+  </sodipodi:namedview>
+  <title
+     id="chirp-logo-title">Chirp</title>
+  <text
+     x="66"
+     y="33"
+     dominant-baseline="central"
+     font-family="system-ui, '-apple-system', 'Segoe UI', sans-serif"
+     font-weight="800"
+     font-size="30px"
+     fill="var(--text, #1a1a1a)"
+     id="text3">Chirp</text>
+  <path
+     id="path4"
+     style="fill:var(--accent, #d9760a);fill-opacity:1;stroke:none;stroke-width:10.9304;stroke-linecap:round;stroke-linejoin:round"
+     d="M 56.601562,14.630859 32.178694,31.942385 56.591797,49.255859 42.412109,31.951172 Z"
+     sodipodi:nodetypes="ccccc" />
+  <path
+     style="fill:var(--accent, #d9760a);fill-opacity:1;stroke:none;stroke-width:10.9304;stroke-linecap:round;stroke-linejoin:round"
+     d="m 48.482447,31.975813 12.653233,0.37052 -0.01853,-0.703987 z"
+     id="path6" />
+  <path
+     style="fill:var(--accent, #d9760a);fill-opacity:1;stroke:none;stroke-width:10.9304;stroke-linecap:round;stroke-linejoin:round"
+     d="M 48.671023,28.248019 60.821306,24.696652 60.586484,24.032724 Z"
+     id="path6-8" />
+  <path
+     style="fill:var(--accent, #d9760a);fill-opacity:1;stroke:none;stroke-width:10.9304;stroke-linecap:round;stroke-linejoin:round"
+     d="m 48.553335,35.710017 12.150283,3.551367 -0.234822,0.663928 z"
+     id="path6-8-2" />
+</svg>
