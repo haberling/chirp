@@ -52,8 +52,11 @@ const STYLES = `
     padding: 16px;
     max-width: 640px;
     box-sizing: border-box;
+    --chirp-logo-text: #1a1a1a;
+    --chirp-logo-accent: #1a56db;
   }
   .chirp-root * { box-sizing: border-box; }
+  .chirp-logo { display: block; height: 28px; width: auto; margin-bottom: 12px; }
   .chirp-comment { border-bottom: 1px solid #e2e2e2; padding: 12px 0; }
   .chirp-comment-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
   .chirp-comment-author { font-weight: 600; }
@@ -85,6 +88,7 @@ const STYLES = `
   .chirp-status { min-height: 1.2em; font-size: 13px; }
   .chirp-status:empty { min-height: 0; }
   .chirp-status-error { margin: 8px 0; padding: 6px 10px; border-radius: 6px; background: #b91c1c; color: #fff; }
+  .chirp-config-warning { margin: 0; padding: 10px 14px; border-radius: 6px; background: #b91c1c; color: #fff; font-size: 13px; line-height: 1.5; }
   .chirp-status-success { margin: 8px 0; padding: 6px 10px; border-radius: 6px; background: #e8f0fe; color: #1a56db; }
   .chirp-rules-link {
     font: inherit; font-weight: 600; padding: 0; border: none; background: none;
@@ -161,7 +165,11 @@ const STYLES = `
   .chirp-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
   @media (prefers-color-scheme: dark) {
-    .chirp-root { color: #e8e8e8; background: #1c1c1c; border-color: #3a3a3a; }
+    .chirp-root {
+      color: #e8e8e8; background: #1c1c1c; border-color: #3a3a3a;
+      --chirp-logo-text: #e8e8e8;
+      --chirp-logo-accent: #7ba7f0;
+    }
     .chirp-comment { border-color: #333; }
     .chirp-comment-reply { border-left-color: #444; }
     .chirp-comment-badge { background: #1e3a8a; color: #c7d7fe; }
@@ -182,6 +190,13 @@ function buildSkeleton() {
   const root = document.createElement("div");
   root.className = "chirp-root";
   root.innerHTML = `
+    <svg class="chirp-logo" viewBox="28 0 162 64" aria-hidden="true">
+      <text x="66" y="33" dominant-baseline="central" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-weight="800" font-size="30" fill="var(--chirp-logo-text)">Chirp</text>
+      <path fill="var(--chirp-logo-accent)" d="M 56.601562,14.630859 32.178694,31.942385 56.591797,49.255859 42.412109,31.951172 Z"/>
+      <path fill="var(--chirp-logo-accent)" d="m 48.482447,31.975813 12.653233,0.37052 -0.01853,-0.703987 z"/>
+      <path fill="var(--chirp-logo-accent)" d="M 48.671023,28.248019 60.821306,24.696652 60.586484,24.032724 Z"/>
+      <path fill="var(--chirp-logo-accent)" d="m 48.553335,35.710017 12.150283,3.551367 -0.234822,0.663928 z"/>
+    </svg>
     <div data-chirp-list></div>
     <button type="button" class="chirp-load-more" data-chirp-load-more hidden>Load more</button>
     <div class="chirp-status" role="status" aria-live="polite" data-chirp-status></div>
@@ -219,12 +234,44 @@ function buildSkeleton() {
   return root;
 }
 
+// Site owners are the audience here, not developers -- they may never
+// open devtools, so a console.error alone is easy to ship past unnoticed
+// (this is why the missing-data-chirp-page case below used to be silent
+// past the console). Builds its own minimal shadow host rather than
+// reusing buildSkeleton(), since there's no real widget to show around
+// it -- required config is missing, so nothing past this message should
+// render.
+function showConfigWarning(scriptEl, missing) {
+  const host = document.createElement("div");
+  scriptEl.insertAdjacentElement("afterend", host);
+  const shadow = host.attachShadow({ mode: "open" });
+
+  const style = document.createElement("style");
+  style.textContent = STYLES;
+  shadow.appendChild(style);
+
+  const root = document.createElement("div");
+  root.className = "chirp-root";
+  const warning = document.createElement("p");
+  warning.className = "chirp-config-warning";
+  warning.setAttribute("role", "alert");
+  warning.textContent =
+    `Chirp is not configured: missing required attribute${missing.length > 1 ? "s" : ""} ` +
+    `${missing.join(" and ")} on the <script> tag embedding this widget.`;
+  root.appendChild(warning);
+  shadow.appendChild(root);
+}
+
 async function init(scriptEl) {
   const pageId = scriptEl.dataset.chirpPage;
   const turnstileSiteKey = scriptEl.dataset.chirpTurnstileSitekey;
 
-  if (!pageId) {
-    console.error("[chirp] data-chirp-page is required on the Chirp <script> tag");
+  const missing = [];
+  if (!pageId) missing.push("data-chirp-page");
+  if (!turnstileSiteKey) missing.push("data-chirp-turnstile-sitekey");
+  if (missing.length) {
+    console.error(`[chirp] missing required attribute(s) on the Chirp <script> tag: ${missing.join(", ")}`);
+    showConfigWarning(scriptEl, missing);
     return;
   }
 
@@ -264,7 +311,23 @@ async function init(scriptEl) {
   });
 }
 
-const scriptEl = document.querySelector("script[data-chirp-page]");
+// Prefers the data-chirp-page match (the common case, and unambiguous
+// even with multiple <script> tags on the page). Falls back to matching
+// on this file's own filename so a *completely* omitted data-chirp-page
+// still finds its own <script> tag to anchor a visible warning to,
+// instead of only the console-only "could not find" message below --
+// the config-warning case this whole lookup exists to support.
+function findScriptEl() {
+  const withPage = document.querySelector("script[data-chirp-page]");
+  if (withPage) return withPage;
+  return (
+    Array.from(document.querySelectorAll("script[src]")).find((el) =>
+      new URL(el.src, document.baseURI).pathname.endsWith("/chirp-widget.js")
+    ) || null
+  );
+}
+
+const scriptEl = findScriptEl();
 if (!scriptEl) {
   console.error("[chirp] could not find the Chirp <script> tag (expected a data-chirp-page attribute on it)");
 } else {

@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Chirp — Canary widget, unconfigured (not shipped, delete before commit)</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-elevated: #f7f7f7;
+      --text: #1a1a1a;
+      --text-dim: #666666;
+      --border: #dddddd;
+      --accent: #d9760a;
+    }
+    body { font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  </style>
+  <link rel="stylesheet" href="chirp.css">
+</head>
+<body>
+  <h1>Canary widget — API_ORIGIN / TURNSTILE_SITE_KEY still the shipped placeholders</h1>
+  <p>This is what a Canary site owner sees if they copy chirp.html/chirp.js/chirp.css into their widgets/ folder and forget to edit the two constants at the top of chirp.js.</p>
+  <div class="chirp-widget" data-widget="chirp" data-chirp-page="demo-page"></div>
+  <script src="chirp-unconfigured.js" defer></script>
+</body>
+</html>
